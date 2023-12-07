@@ -26,7 +26,6 @@ public class ClassExplorer {
                 if(row.endsWith(".class")){
                     String classNameWithoutExtension = packageName + "." + row.substring(0, row.indexOf(".class"));
                     classNames.add(classNameWithoutExtension);
-                    LuisLogger.log(ClassExplorer.class, "Class found: " + classNameWithoutExtension);
                 } else {
                     classNames.addAll(packageExplorer(packageName+"."+row));
                 }
