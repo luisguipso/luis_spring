@@ -18,11 +18,23 @@ public class LuispringApplication {
 
         List<String> allClasses = ClassExplorer.retrieveAllClasses(sourceClass);
 
-        Logger.getLogger("org.apache").setLevel(Level.OFF);
+        disableApacheLogs();
         LuisLogger.showBanner();
         LuisLogger.log(LuispringApplication.class, "Starting Application");
         long startupInit = System.currentTimeMillis();
 
+        Tomcat tomcat = startEmbededTomcat();
+
+        long startupEnd = System.currentTimeMillis();
+        LuisLogger.log(LuispringApplication.class, "LuisSpring Web Application started in: " + (startupEnd-startupInit) + "ms");
+        tomcat.getServer().await();
+    }
+
+    private static void disableApacheLogs() {
+        Logger.getLogger("org.apache").setLevel(Level.OFF);
+    }
+
+    private static Tomcat startEmbededTomcat() {
         Tomcat tomcat = new Tomcat();
         Connector connector = new Connector();
         connector.setPort(8080);
@@ -41,9 +53,6 @@ public class LuispringApplication {
         } catch (LifecycleException e) {
             e.printStackTrace();
         }
-
-        long startupEnd = System.currentTimeMillis();
-        LuisLogger.log(LuispringApplication.class, "LuisSpring Web Application started in: " + (startupEnd-startupInit) + "ms");
-        tomcat.getServer().await();
+        return tomcat;
     }
 }
