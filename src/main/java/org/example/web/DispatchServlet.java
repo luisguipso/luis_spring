@@ -1,5 +1,7 @@
 package org.example.web;
 
+
+import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,13 +21,15 @@ public class DispatchServlet extends HttpServlet {
     public void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         if (request.getRequestURL().toString().endsWith("/favicon.ico"))
             return;
+        PrintWriter writer = new PrintWriter(response.getWriter());
+        Gson gson = new Gson();
 
         String uri = request.getRequestURI();
         String httpMethod = request.getMethod().toUpperCase();
         String key = httpMethod + uri;
         RequestControllerData data = ControllersMap.values.get(key);
         LuisLogger.log(DispatchServlet.class, "URI:"+uri+"("+httpMethod+") - Handler "+data.getControllerMethod());
-        
+
         Object result = null;
         LuisLogger.log(DispatchServlet.class, "Searching for controller instance");
         try {
@@ -55,8 +59,7 @@ public class DispatchServlet extends HttpServlet {
 
 
 
-        PrintWriter writer = new PrintWriter(response.getWriter());
-        writer.println(result);
+        writer.println(gson.toJson(result));
         writer.close();
     }
 }
