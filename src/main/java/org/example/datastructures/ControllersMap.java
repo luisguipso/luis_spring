@@ -1,8 +1,8 @@
 package org.example.datastructures;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class ControllersMap {
-    public static HashMap<String, RequestControllerData> values = new HashMap<>();
-
+    public static Map<String, RequestControllerData> values = new HashMap<>();
 }
