@@ -1,5 +1,6 @@
 package org.example.metadata;
 
+import org.example.annotation.LuisController;
 import org.example.util.LuisLogger;
 import org.example.web.LuisSpringApplication;
 
@@ -8,7 +9,7 @@ import java.util.List;
 
 public class ClassMetadataExtractor {
 
-    private MethodMetadataExtractor methodExtractor;
+    private final MethodMetadataExtractor methodExtractor;
 
     public ClassMetadataExtractor(MethodMetadataExtractor methodExtractor){
         this.methodExtractor = methodExtractor;
@@ -18,7 +19,7 @@ public class ClassMetadataExtractor {
         try {
             for (String className : allClasses){
                 for (Annotation classAnnotation : Class.forName(className).getAnnotations()){
-                    if(classAnnotation.annotationType().getSimpleName().equals("LuisController")){
+                    if(classAnnotation instanceof LuisController){
                         LuisLogger.log(LuisSpringApplication.class, "Found a Controller: " + className);
                         methodExtractor.extractMetadata(className);
                     }
