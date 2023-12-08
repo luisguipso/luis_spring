@@ -31,7 +31,7 @@ public class DispatchServlet extends HttpServlet {
         String httpMethod = request.getMethod().toUpperCase();
         String key = httpMethod + uri;
         RequestControllerData data = ControllersMap.values.get(key);
-        LuisLogger.log(DispatchServlet.class, "URI:"+uri+"("+httpMethod+") - Handler "+data.getControllerMethod());
+        LuisLogger.log(DispatchServlet.class, "URI:" + uri + "(" + httpMethod + ") - Handler " + data.getControllerMethod());
 
         Object result = null;
         LuisLogger.log(DispatchServlet.class, "Searching for controller instance");
@@ -44,33 +44,31 @@ public class DispatchServlet extends HttpServlet {
             }
 
             Method controllerMethod = null;
-            for(Method each : controller.getClass().getMethods()){
-                if(each.getName().equals(data.getControllerMethod())) {
+            for (Method each : controller.getClass().getMethods()) {
+                if (each.getName().equals(data.getControllerMethod())) {
                     controllerMethod = each;
                     break;
                 }
             }
-            LuisLogger.log(DispatchServlet.class, "Invoking method "+controllerMethod.getName()+" to handle request");
-            if(controllerMethod.getParameterCount() > 0){
-                LuisLogger.log(DispatchServlet.class, "Method "+controllerMethod.getName() + " has parameters");
+            LuisLogger.log(DispatchServlet.class, "Invoking method " + controllerMethod.getName() + " to handle request");
+            if (controllerMethod.getParameterCount() > 0) {
+                LuisLogger.log(DispatchServlet.class, "Method " + controllerMethod.getName() + " has parameters");
                 Object arg;
                 Parameter parameter = controllerMethod.getParameters()[0];
-                if(parameter.getAnnotations()[0].annotationType().getSimpleName().equals("LuisBody")){
+                if (parameter.getAnnotations()[0].annotationType().getSimpleName().equals("LuisBody")) {
                     String body = readBytesFromRequest(request);
-                    LuisLogger.log(DispatchServlet.class, "    Found parameter from request of type "+parameter.getType().getName());
-                    LuisLogger.log(DispatchServlet.class, "    Parameter content: "+body);
+                    LuisLogger.log(DispatchServlet.class, "    Found parameter from request of type " + parameter.getType().getName());
+                    LuisLogger.log(DispatchServlet.class, "    Parameter content: " + body);
                     arg = gson.fromJson(body, parameter.getType());
                     result = controllerMethod.invoke(controller, arg);
                 }
-                else {
-                    result = controllerMethod.invoke(controller);
-                }
+
+            } else {
+                result = controllerMethod.invoke(controller);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
 
 
         writer.println(gson.toJson(result));
@@ -81,7 +79,7 @@ public class DispatchServlet extends HttpServlet {
         StringBuilder str = new StringBuilder();
         String line;
         BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
-        while((line = br.readLine()) != null){
+        while ((line = br.readLine()) != null) {
             str.append(line);
         }
         return str.toString();
