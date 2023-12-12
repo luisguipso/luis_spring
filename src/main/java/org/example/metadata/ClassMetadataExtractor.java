@@ -1,7 +1,6 @@
 package org.example.metadata;
 
 import org.example.annotation.LuisController;
-import org.example.annotation.LuisService;
 import org.example.datastructures.ServiceImplementationMap;
 import org.example.util.LuisLogger;
 
@@ -23,8 +22,8 @@ public class ClassMetadataExtractor {
                     if(classAnnotation instanceof LuisController){
                         LuisLogger.log(ClassMetadataExtractor.class, "Found a Controller: " + className);
                         methodExtractor.extractMetadata(className);
-                    } else if(classAnnotation instanceof LuisService) {
-                        LuisLogger.log(ClassMetadataExtractor.class, "Found a Service: " + className);
+                    } else {
+                        LuisLogger.log(ClassMetadataExtractor.class, "Found a Component: " + className);
                         for (Class<?> interfacee : Class.forName(className).getInterfaces()){
                             ServiceImplementationMap.implementations.put(interfacee.getName(), className);
                         }
