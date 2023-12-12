@@ -6,15 +6,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.example.datastructures.ControllersInstances;
-import org.example.datastructures.ControllersMap;
-import org.example.datastructures.RequestControllerData;
+import org.example.datastructures.*;
 import org.example.util.LuisLogger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
@@ -41,6 +41,7 @@ public class DispatchServlet extends HttpServlet {
                 LuisLogger.log(DispatchServlet.class, "Creating new controller instance");
                 controller = Class.forName(data.getControllerClass()).getDeclaredConstructor().newInstance();
                 ControllersInstances.instances.put(data.getControllerClass(), controller);
+                injectDependencies(controller);
             }
 
             Method controllerMethod = null;
@@ -83,5 +84,30 @@ public class DispatchServlet extends HttpServlet {
             str.append(line);
         }
         return str.toString();
+    }
+
+    private void injectDependencies(Object client) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        for(Field attribute : client.getClass().getDeclaredFields()){
+            String attributeTypeName = attribute.getType().getName();
+            Object serviceImpl = null;
+            if(DependencyInjectionMap.objects.get(attributeTypeName) == null){
+                LuisLogger.log(DispatchServlet.class, "Couldn't find instance for " + attributeTypeName);
+                String implTypeName = ServiceImplementationMap.implementations.get(attributeTypeName);
+                if(implTypeName != null){
+                    LuisLogger.log(DispatchServlet.class, "Found instance for " + implTypeName);
+                    serviceImpl = DependencyInjectionMap.objects.get(implTypeName);
+                    if(serviceImpl == null){
+                        LuisLogger.log(DispatchServlet.class, "Found instance for " + implTypeName);
+                        serviceImpl = Class.forName(implTypeName).getDeclaredConstructor().newInstance();
+                        DependencyInjectionMap.objects.put(implTypeName, serviceImpl);
+                    }
+                }
+            }
+            if(serviceImpl != null) {
+                attribute.setAccessible(true);
+                attribute.set(client, serviceImpl);
+                LuisLogger.log(DispatchServlet.class, "Object injected successfully");
+            }
+        }
     }
 }

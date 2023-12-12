@@ -1,8 +1,9 @@
 package org.example.metadata;
 
 import org.example.annotation.LuisController;
+import org.example.annotation.LuisService;
+import org.example.datastructures.ServiceImplementationMap;
 import org.example.util.LuisLogger;
-import org.example.web.LuisSpringApplication;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -20,8 +21,13 @@ public class ClassMetadataExtractor {
             for (String className : allClasses){
                 for (Annotation classAnnotation : Class.forName(className).getAnnotations()){
                     if(classAnnotation instanceof LuisController){
-                        LuisLogger.log(LuisSpringApplication.class, "Found a Controller: " + className);
+                        LuisLogger.log(ClassMetadataExtractor.class, "Found a Controller: " + className);
                         methodExtractor.extractMetadata(className);
+                    } else if(classAnnotation instanceof LuisService) {
+                        LuisLogger.log(ClassMetadataExtractor.class, "Found a Service: " + className);
+                        for (Class<?> interfacee : Class.forName(className).getInterfaces()){
+                            ServiceImplementationMap.implementations.put(interfacee.getName(), className);
+                        }
                     }
                 }
             }
