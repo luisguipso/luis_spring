@@ -4,11 +4,14 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
+import org.example.boot.ComponentLoader;
+import org.example.explore.ClassExplorer;
 import org.example.metadata.MetadataExtractor;
 import org.example.metadata.MetadataExtractorImpl;
 import org.example.util.LuisLogger;
 
 import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,8 +23,11 @@ public class LuisSpringApplication {
         LuisLogger.log(LuisSpringApplication.class, "Starting Application");
         long startupInit = System.currentTimeMillis();
 
-        MetadataExtractor metadataExtractor = new MetadataExtractorImpl();
-        metadataExtractor.extractMetadata(sourceClass);
+        List<String> allClasses = ClassExplorer.retrieveAllClasses(sourceClass);
+        MetadataExtractor metadataExtractor = new MetadataExtractorImpl(allClasses);
+        metadataExtractor.extractMetadata();
+        ComponentLoader loader = new ComponentLoader();
+        loader.loadComponents(allClasses);
         Tomcat tomcat = startEmbededTomcat();
 
         long startupEnd = System.currentTimeMillis();

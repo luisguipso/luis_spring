@@ -1,19 +1,19 @@
 package org.example.metadata;
 
-import org.example.explore.ClassExplorer;
-
 import java.util.List;
 
 public class MetadataExtractorImpl implements MetadataExtractor {
+
+    List<String> allClasses;
+    public MetadataExtractorImpl(List<String> allClasses){
+        this.allClasses = allClasses;
+    }
+
     @Override
-    public void extractMetadata(Class<?> sourceClass) {
-        List<String> allClasses = getAllClasses(sourceClass);
+    public void extractMetadata() {
         MethodMetadataExtractor methodExtractor = new MethodMetadataExtractor();
         ClassMetadataExtractor classMetadataExtractor = new ClassMetadataExtractor(methodExtractor);
         classMetadataExtractor.extractMetadata(allClasses);
     }
 
-    private static List<String> getAllClasses(Class<?> sourceClass) {
-        return ClassExplorer.retrieveAllClasses(sourceClass);
-    }
 }
