@@ -17,11 +17,11 @@ public class MethodMetadataExtractor{
         String path = "";
         for(Method method : Class.forName(className).getDeclaredMethods()){
             for(Annotation methodAnnotation : method.getAnnotations()){
-                if(methodAnnotation.annotationType().getSimpleName().equals("LuisGetMethod")){
-                    path = ((LuisGetMethod)methodAnnotation).value();
+                if(methodAnnotation instanceof LuisGetMethod luisGetMethod){
+                    path = luisGetMethod.value();
                     httpMethod = "GET";
-                } else if (methodAnnotation.annotationType().getSimpleName().equals("LuisPostMethod")) {
-                    path = ((LuisPostMethod)methodAnnotation).value();
+                } else if (methodAnnotation instanceof LuisPostMethod luisPostMethod) {
+                    path = luisPostMethod.value();
                     httpMethod = "POST";
                 }
                 RequestControllerData data = new RequestControllerData(httpMethod, path, className, method.getName());
