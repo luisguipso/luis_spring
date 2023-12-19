@@ -2,12 +2,13 @@ package org.example.web;
 
 
 import com.google.gson.Gson;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.annotation.LuisBody;
-import org.example.datastructures.*;
+import org.example.datastructures.ComponentsInstances;
+import org.example.datastructures.ControllersMap;
+import org.example.datastructures.RequestControllerData;
 import org.example.util.LuisLogger;
 
 import java.io.BufferedReader;
@@ -17,6 +18,8 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 
 public class DispatchServlet extends HttpServlet {
 
@@ -24,14 +27,23 @@ public class DispatchServlet extends HttpServlet {
     public void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (request.getRequestURL().toString().endsWith("/favicon.ico"))
             return;
-        PrintWriter writer = new PrintWriter(response.getWriter());
-        Gson gson = new Gson();
 
-        String uri = request.getRequestURI();
-        String httpMethod = request.getMethod().toUpperCase();
-        String key = httpMethod + uri;
-        RequestControllerData data = ControllersMap.values.get(key);
-        LuisLogger.log(DispatchServlet.class, "URI:" + uri + "(" + httpMethod + ") - Handler " + data.getControllerMethod());
+
+        String requestURI = request.getRequestURI();
+        String requestMethod = request.getMethod();
+        Optional<RequestControllerData> foundData = searchForControllerDirectly(requestURI, requestMethod);
+        if (foundData.isEmpty())
+            foundData = searchControllerWithPathVariable(requestURI, requestMethod);
+
+        RequestControllerData data;
+        if (foundData.isEmpty()) {
+            response.sendError(404, "Not Found.");
+            return;
+        }
+        data = foundData.get();
+
+
+        LuisLogger.log(DispatchServlet.class, "URI:" + requestURI + "(" + requestMethod + ") - Handler " + data.getControllerMethod());
 
         Object result = null;
         LuisLogger.log(DispatchServlet.class, "Searching for controller instance");
@@ -39,6 +51,7 @@ public class DispatchServlet extends HttpServlet {
         Method controllerMethod = getMethod(data, controller);
         LuisLogger.log(DispatchServlet.class, "Invoking method " + controllerMethod.getName() + " to handle request");
 
+        Gson gson = new Gson();
         try {
             if (controllerMethod.getParameterCount() > 0) {
                 LuisLogger.log(DispatchServlet.class, "Method " + controllerMethod.getName() + " has parameters");
@@ -58,9 +71,22 @@ public class DispatchServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-
+        PrintWriter writer = new PrintWriter(response.getWriter());
         writer.println(gson.toJson(result));
         writer.close();
+    }
+
+    private static Optional<RequestControllerData> searchForControllerDirectly(String uri, String httpMethod) {
+        String key = httpMethod + uri;
+        return Optional.ofNullable(ControllersMap.values.get(key));
+    }
+
+    private Optional<RequestControllerData> searchControllerWithPathVariable(String uri, String httpMethod) {
+        ControllerUriChecker controllerUriChecker = new ControllerUriChecker();
+        return ControllersMap.values.entrySet().stream()
+                .filter(each -> controllerUriChecker.matches(each.getKey(), httpMethod+uri))
+                .map(Map.Entry::getValue)
+                .findFirst();
     }
 
     private Object getController(RequestControllerData data) {
