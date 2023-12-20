@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.example.annotation.LuisBody;
 import org.example.annotation.LuisPathVariable;
 import org.example.datastructures.ComponentsInstances;
-import org.example.datastructures.ControllersMap;
 import org.example.datastructures.RequestControllerData;
 import org.example.util.LuisLogger;
 
@@ -19,7 +18,6 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 
 public class DispatchServlet extends HttpServlet {
@@ -29,12 +27,7 @@ public class DispatchServlet extends HttpServlet {
         if (request.getRequestURL().toString().endsWith("/favicon.ico"))
             return;
 
-
-        String requestURI = request.getRequestURI();
-        String requestMethod = request.getMethod();
-        Optional<RequestControllerData> foundData = searchForControllerDirectly(requestURI, requestMethod);
-        if (foundData.isEmpty())
-            foundData = searchControllerWithPathVariable(requestURI, requestMethod);
+        Optional<RequestControllerData> foundData = ControllerMatcher.searchController(request);
 
         RequestControllerData data;
         if (foundData.isEmpty()) {
@@ -44,7 +37,6 @@ public class DispatchServlet extends HttpServlet {
         data = foundData.get();
 
 
-        LuisLogger.log(DispatchServlet.class, "URI:" + requestURI + "(" + requestMethod + ") - Handler " + data.getControllerMethod());
 
         Object result = null;
         LuisLogger.log(DispatchServlet.class, "Searching for controller instance");
@@ -88,18 +80,6 @@ public class DispatchServlet extends HttpServlet {
         writer.close();
     }
 
-    private static Optional<RequestControllerData> searchForControllerDirectly(String uri, String httpMethod) {
-        String key = httpMethod + uri;
-        return Optional.ofNullable(ControllersMap.values.get(key));
-    }
-
-    private Optional<RequestControllerData> searchControllerWithPathVariable(String uri, String httpMethod) {
-        ControllerUriChecker controllerUriChecker = new ControllerUriChecker();
-        return ControllersMap.values.entrySet().stream()
-                .filter(each -> controllerUriChecker.matches(each.getKey(), httpMethod + uri))
-                .map(Map.Entry::getValue)
-                .findFirst();
-    }
 
     private Object getController(RequestControllerData data) {
         Object controller = ComponentsInstances.instances.get(data.getControllerClass());

@@ -1,3 +1,5 @@
+package web;
+
 import org.example.web.ControllerUriChecker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
