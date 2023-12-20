@@ -1,4 +1,3 @@
-import org.example.datastructures.RequestControllerData;
 import org.example.web.ControllerUriChecker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,47 +15,27 @@ class TestPathMatcher {
 
     @Test
     void givenASimpleUriShouldMatch() {
-        RequestControllerData data = new RequestControllerData();
-        data.setUrl("/simple");
-
-        String requestURI = "/simple";
-        assertTrue(checker.matches(data.getUrl(), requestURI));
+        assertTrue(checker.matches("/simple", "/simple"));
     }
 
     @Test
     void givenAnURIWithTwoTokensShouldMatch() {
-        RequestControllerData data = new RequestControllerData();
-        data.setUrl("/simple/diple");
-
-        String requestURI = "/simple/diple";
-        assertTrue(checker.matches(data.getUrl(), requestURI));
+        assertTrue(checker.matches("/simple/diple", "/simple/diple"));
     }
 
     @Test
     void givenAnURIWithAParameterShouldMatch() {
-        RequestControllerData data = new RequestControllerData();
-        data.setUrl("/product/{id}");
-
-        String requestURI = "/product/1";
-        assertTrue(checker.matches(data.getUrl(), requestURI));
+        assertTrue(checker.matches("/product/{id}", "/product/1"));
     }
 
     @Test
     void givenAnURIWithoutAParameterShouldNotMatch() {
-        RequestControllerData data = new RequestControllerData();
-        data.setUrl("/product/{id}");
-
-        String requestURI = "/product";
-        assertFalse(checker.matches(data.getUrl(), requestURI));
+        assertFalse(checker.matches("/product/{id}", "/product"));
     }
 
     @Test
     void givenAnURIWithoutDiferentTokensShouldNotMatch() {
-        RequestControllerData data = new RequestControllerData();
-        data.setUrl("/product/{id}");
-
-        String requestURI = "/person/1";
-        assertFalse(checker.matches(data.getUrl(), requestURI));
+        assertFalse(checker.matches("/product/{id}", "/person/1"));
     }
 
 }
