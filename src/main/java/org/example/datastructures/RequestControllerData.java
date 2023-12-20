@@ -1,10 +1,16 @@
 package org.example.datastructures;
 
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.List;
+
 public class RequestControllerData {
     private String httpMethod;
     private String url;
     private String controllerClass;
     private String controllerMethod;
+
+    private List<Parameter> pathParameters;
 
     public RequestControllerData() {
     }
@@ -14,6 +20,12 @@ public class RequestControllerData {
         this.url = url;
         this.controllerClass = controllerClass;
         this.controllerMethod = controllerMethod;
+        this.pathParameters = new ArrayList<>();
+    }
+
+    public RequestControllerData(String httpMethod, String url, String controllerClass, String controllerMethod, List<Parameter> pathParameters) {
+        this(httpMethod, url, controllerClass, controllerMethod);
+        this.pathParameters = pathParameters;
     }
 
     public String getHttpMethod() {
@@ -46,5 +58,9 @@ public class RequestControllerData {
 
     public void setControllerMethod(String controllerMethod) {
         this.controllerMethod = controllerMethod;
+    }
+
+    public List<Parameter> getPathParameters() {
+        return pathParameters;
     }
 }

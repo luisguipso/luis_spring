@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.annotation.LuisBody;
+import org.example.annotation.LuisPathVariable;
 import org.example.datastructures.ComponentsInstances;
 import org.example.datastructures.ControllersMap;
 import org.example.datastructures.RequestControllerData;
@@ -56,13 +57,24 @@ public class DispatchServlet extends HttpServlet {
             if (controllerMethod.getParameterCount() > 0) {
                 LuisLogger.log(DispatchServlet.class, "Method " + controllerMethod.getName() + " has parameters");
                 Object arg;
-                Parameter parameter = controllerMethod.getParameters()[0];
-                if (parameter.getAnnotations()[0] instanceof LuisBody) {
-                    String body = readBytesFromRequest(request);
-                    LuisLogger.log(DispatchServlet.class, "    Found parameter from request of type " + parameter.getType().getName());
-                    LuisLogger.log(DispatchServlet.class, "    Parameter content: " + body);
-                    arg = gson.fromJson(body, parameter.getType());
-                    result = controllerMethod.invoke(controller, arg);
+                for (Parameter parameter : controllerMethod.getParameters()) {
+                    if (Arrays.stream(parameter.getAnnotations()).anyMatch(LuisBody.class::isInstance)) {
+                        String body = readBytesFromRequest(request);
+                        LuisLogger.log(DispatchServlet.class, "    Found parameter from request of type " + parameter.getType().getName());
+                        LuisLogger.log(DispatchServlet.class, "    Parameter content: " + body);
+                        arg = gson.fromJson(body, parameter.getType());
+                        result = controllerMethod.invoke(controller, arg);
+                    } else if (Arrays.stream(parameter.getAnnotations()).anyMatch(LuisPathVariable.class::isInstance)) {
+                        String paramName = Arrays.stream(parameter.getAnnotations())
+                                .filter(LuisPathVariable.class::isInstance)
+                                .map(each -> ((LuisPathVariable) each).value())
+                                .findFirst().get();
+                        String variable = readVariableFromPath(paramName, data.getUrl(), request.getRequestURI());
+                        LuisLogger.log(DispatchServlet.class, "    Found parameter from request of type " + parameter.getType().getName());
+                        LuisLogger.log(DispatchServlet.class, "    Parameter content: " + variable);
+                        arg = gson.fromJson(variable, parameter.getType());
+                        result = controllerMethod.invoke(controller, arg);
+                    }
                 }
             } else {
                 result = controllerMethod.invoke(controller);
@@ -84,7 +96,7 @@ public class DispatchServlet extends HttpServlet {
     private Optional<RequestControllerData> searchControllerWithPathVariable(String uri, String httpMethod) {
         ControllerUriChecker controllerUriChecker = new ControllerUriChecker();
         return ControllersMap.values.entrySet().stream()
-                .filter(each -> controllerUriChecker.matches(each.getKey(), httpMethod+uri))
+                .filter(each -> controllerUriChecker.matches(each.getKey(), httpMethod + uri))
                 .map(Map.Entry::getValue)
                 .findFirst();
     }
@@ -115,6 +127,15 @@ public class DispatchServlet extends HttpServlet {
             str.append(line);
         }
         return str.toString();
+    }
+
+    private String readVariableFromPath(String paramName, String methodUrl, String requestURI) {
+        String[] methodUrlTokens = methodUrl.split("/");
+        for (int i = 0; i < methodUrlTokens.length; i++)
+            if(methodUrlTokens[i].replace("{","").replace("}","").equals(paramName))
+                return requestURI.split("/")[i];
+
+        throw new RuntimeException("Could not read variable '"+ paramName + "' from path: " + requestURI);
     }
 
 
