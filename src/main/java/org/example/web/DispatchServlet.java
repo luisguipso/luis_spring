@@ -17,7 +17,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class DispatchServlet extends HttpServlet {
@@ -28,15 +30,11 @@ public class DispatchServlet extends HttpServlet {
             return;
 
         Optional<RequestControllerData> foundData = ControllerMatcher.searchController(request);
-
-        RequestControllerData data;
         if (foundData.isEmpty()) {
             response.sendError(404, "Not Found.");
             return;
         }
-        data = foundData.get();
-
-
+        RequestControllerData data = foundData.get();
 
         Object result = null;
         LuisLogger.log(DispatchServlet.class, "Searching for controller instance");
@@ -48,14 +46,13 @@ public class DispatchServlet extends HttpServlet {
         try {
             if (controllerMethod.getParameterCount() > 0) {
                 LuisLogger.log(DispatchServlet.class, "Method " + controllerMethod.getName() + " has parameters");
-                Object arg;
+                List<Object> args = new ArrayList<>();
                 for (Parameter parameter : controllerMethod.getParameters()) {
                     if (Arrays.stream(parameter.getAnnotations()).anyMatch(LuisBody.class::isInstance)) {
                         String body = readBytesFromRequest(request);
                         LuisLogger.log(DispatchServlet.class, "    Found parameter from request of type " + parameter.getType().getName());
                         LuisLogger.log(DispatchServlet.class, "    Parameter content: " + body);
-                        arg = gson.fromJson(body, parameter.getType());
-                        result = controllerMethod.invoke(controller, arg);
+                        args.add(gson.fromJson(body, parameter.getType()));
                     } else if (Arrays.stream(parameter.getAnnotations()).anyMatch(LuisPathVariable.class::isInstance)) {
                         String paramName = Arrays.stream(parameter.getAnnotations())
                                 .filter(LuisPathVariable.class::isInstance)
@@ -64,9 +61,9 @@ public class DispatchServlet extends HttpServlet {
                         String variable = readVariableFromPath(paramName, data.getUrl(), request.getRequestURI());
                         LuisLogger.log(DispatchServlet.class, "    Found parameter from request of type " + parameter.getType().getName());
                         LuisLogger.log(DispatchServlet.class, "    Parameter content: " + variable);
-                        arg = gson.fromJson(variable, parameter.getType());
-                        result = controllerMethod.invoke(controller, arg);
+                        args.add(gson.fromJson(variable, parameter.getType()));
                     }
+                    result = controllerMethod.invoke(controller, args.toArray());
                 }
             } else {
                 result = controllerMethod.invoke(controller);
