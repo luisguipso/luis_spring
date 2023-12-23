@@ -5,7 +5,7 @@ public class ClassUtil {
         try {
             return Class.forName(className);
         } catch (Exception e) {
-            throw new RuntimeException(String.format("Classe: %s não encontrada", className), e);
+            throw new RuntimeException(String.format("Classe: %s não encontrada.", className), e);
         }
     }
 }
