@@ -31,15 +31,18 @@ public class MethodMetadataExtractor{
                     continue;
                 }
 
-                List<Parameter> pathParameters = Arrays.stream(method.getParameters())
-                        .filter(each -> Arrays.stream(each.getAnnotations()).anyMatch(LuisPathVariable.class::isInstance))
-                        .toList();
-
+                List<Parameter> pathParameters = getPathParameters(method);
                 RequestControllerData data = new RequestControllerData(httpMethod, path, className, method.getName(), pathParameters);
                 ControllersMap.values.put(httpMethod + path, data);
             }
         }
         logFoundHttpMethods();
+    }
+
+    private static List<Parameter> getPathParameters(Method method) {
+        return Arrays.stream(method.getParameters())
+                .filter(each -> Arrays.stream(each.getAnnotations()).anyMatch(LuisPathVariable.class::isInstance))
+                .toList();
     }
 
     private static void logFoundHttpMethods() {

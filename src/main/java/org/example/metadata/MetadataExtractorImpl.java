@@ -15,5 +15,4 @@ public class MetadataExtractorImpl implements MetadataExtractor {
         ClassMetadataExtractor classMetadataExtractor = new ClassMetadataExtractor(methodExtractor);
         classMetadataExtractor.extractMetadata(allClasses);
     }
-
 }

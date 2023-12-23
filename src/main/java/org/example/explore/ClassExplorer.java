@@ -18,8 +18,8 @@ public class ClassExplorer {
     private static List<String> packageExplorer(String packageName) {
         List<String> classNames = new ArrayList<>();
         try {
-            String replace = packageName.replace(".", File.separator);
-            InputStream stream = ClassLoader.getSystemClassLoader().getResourceAsStream(replace);
+            String packageDirectory = packageName.replace(".", File.separator);
+            InputStream stream = ClassLoader.getSystemClassLoader().getResourceAsStream(packageDirectory);
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
             String row;
             while((row = reader.readLine()) != null){
