@@ -37,7 +37,6 @@ public class DispatchServlet extends HttpServlet {
         RequestControllerData data = foundData.get();
 
         Object result = null;
-        LuisLogger.log(DispatchServlet.class, "Searching for controller instance");
         Object controller = getController(data);
         Method controllerMethod = getMethod(data, controller);
         LuisLogger.log(DispatchServlet.class, "Invoking method " + controllerMethod.getName() + " to handle request");
@@ -79,6 +78,7 @@ public class DispatchServlet extends HttpServlet {
 
 
     private Object getController(RequestControllerData data) {
+        LuisLogger.log(DispatchServlet.class, "Searching for controller instance");
         Object controller = ComponentsInstances.instances.get(data.getControllerClass());
         if (controller == null) {
             throw new RuntimeException("Controller not found");
@@ -114,6 +114,4 @@ public class DispatchServlet extends HttpServlet {
 
         throw new RuntimeException("Could not read variable '"+ paramName + "' from path: " + requestURI);
     }
-
-
 }
