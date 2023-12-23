@@ -12,7 +12,28 @@ public class LuisLogger {
 
     public static void log(Class module, String message){
         String time = LocalDateTime.now().format(DATE_FORMAT);
-        System.out.printf(GREEN+ "%15s " + YELLOW + "%-30s: " + WHITE + "%s\n" + RESET, time, module.getName(), message);
+        System.out.printf(GREEN+ "%15s " + YELLOW + "%-40s: " + WHITE + "%s\n" + RESET, time, getName(module), message);
+    }
+
+    private static String getName(Class module) {
+        String name = module.getName();
+        if (name.length() <= 40)
+            return name;
+
+        return getShortName(name);
+    }
+
+    private static String getShortName(String name) {
+        String[] elements = name.split("\\.");
+        String packageName = getShortPackageName(elements);
+        return packageName + elements[elements.length-1];
+    }
+
+    private static String getShortPackageName(String[] elements) {
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < elements.length - 1; i++)
+            builder.append(elements[i].charAt(0)).append(".");
+        return builder.toString();
     }
 
     public static void showBanner(){
