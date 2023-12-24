@@ -2,6 +2,8 @@ package org.example.util;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class LuisLogger {
     public static String GREEN = "\u001B[32m";
@@ -13,6 +15,16 @@ public class LuisLogger {
     public static void log(Class module, String message){
         String time = LocalDateTime.now().format(DATE_FORMAT);
         System.out.printf(GREEN+ "%15s " + YELLOW + "%-40s: " + WHITE + "%s\n" + RESET, time, getName(module), message);
+    }
+
+    public static void log(Class module, String message, Exception e){
+        message += "%nCaused by: %s%n    %s";
+        message = String.format(message, e, getExceptionStackTrace(e));
+        log(module, message);
+    }
+
+    private static String getExceptionStackTrace(Exception e) {
+        return Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining("\n    "));
     }
 
     private static String getName(Class module) {

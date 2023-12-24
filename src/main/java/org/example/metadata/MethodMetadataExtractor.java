@@ -1,9 +1,7 @@
 package org.example.metadata;
 
 import org.example.annotation.LuisGetMethod;
-import org.example.annotation.LuisPathVariable;
 import org.example.annotation.LuisPostMethod;
-import org.example.annotation.LuisRequestParam;
 import org.example.datastructures.ControllersMap;
 import org.example.datastructures.RequestControllerData;
 import org.example.util.LuisLogger;
@@ -11,9 +9,6 @@ import org.example.web.LuisSpringApplication;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.Arrays;
-import java.util.List;
 
 public class MethodMetadataExtractor{
 
