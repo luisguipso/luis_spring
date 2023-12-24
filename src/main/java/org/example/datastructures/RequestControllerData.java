@@ -10,7 +10,7 @@ public class RequestControllerData {
     private String controllerClass;
     private String controllerMethod;
 
-    private List<Parameter> pathParameters;
+    private List<Parameter> pathVariables;
 
     public RequestControllerData() {
     }
@@ -20,12 +20,12 @@ public class RequestControllerData {
         this.url = url;
         this.controllerClass = controllerClass;
         this.controllerMethod = controllerMethod;
-        this.pathParameters = new ArrayList<>();
+        this.pathVariables = new ArrayList<>();
     }
 
-    public RequestControllerData(String httpMethod, String url, String controllerClass, String controllerMethod, List<Parameter> pathParameters) {
+    public RequestControllerData(String httpMethod, String url, String controllerClass, String controllerMethod, List<Parameter> pathVariables) {
         this(httpMethod, url, controllerClass, controllerMethod);
-        this.pathParameters = pathParameters;
+        this.pathVariables = pathVariables;
     }
 
     public String getHttpMethod() {
@@ -60,7 +60,7 @@ public class RequestControllerData {
         this.controllerMethod = controllerMethod;
     }
 
-    public List<Parameter> getPathParameters() {
-        return pathParameters;
+    public List<Parameter> getPathVariables() {
+        return pathVariables;
     }
 }
