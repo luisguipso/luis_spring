@@ -56,14 +56,14 @@ public class DispatchServlet extends HttpServlet {
                         String paramName = Arrays.stream(parameter.getAnnotations())
                                 .filter(LuisPathVariable.class::isInstance)
                                 .map(each -> ((LuisPathVariable) each).value())
-                                .findFirst().get();
+                                .findFirst().orElseThrow();
                         String variable = readVariableFromPath(paramName, data.getUrl(), request.getRequestURI());
                         LuisLogger.log(DispatchServlet.class, "    Found parameter from request of type " + parameter.getType().getName());
                         LuisLogger.log(DispatchServlet.class, "    Parameter content: " + variable);
                         args.add(gson.fromJson(variable, parameter.getType()));
                     }
-                    result = controllerMethod.invoke(controller, args.toArray());
                 }
+                result = controllerMethod.invoke(controller, args.toArray());
             } else {
                 result = controllerMethod.invoke(controller);
             }
