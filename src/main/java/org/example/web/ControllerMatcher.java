@@ -15,24 +15,22 @@ public class ControllerMatcher {
         if(request == null)
             return Optional.empty();
 
-        String requestURI = request.getRequestURI();
-        String requestMethod = request.getMethod();
-        Optional<RequestControllerData> foundData = searchForControllerDirectly(requestURI, requestMethod);
+        String key = request.getMethod() + request.getRequestURI();
+        Optional<RequestControllerData> foundData = searchForControllerDirectly(key);
         if (foundData.isEmpty())
-            foundData = searchControllerWithPathVariable(requestURI, requestMethod);
+            foundData = searchControllerWithPathVariable(key);
         logFoundHandler(request, foundData);
         return foundData;
     }
 
-    private static Optional<RequestControllerData> searchForControllerDirectly(String uri, String httpMethod) {
-        String key = httpMethod + uri;
+    private static Optional<RequestControllerData> searchForControllerDirectly(String key) {
         return Optional.ofNullable(ControllersMap.values.get(key));
     }
 
-    private static Optional<RequestControllerData> searchControllerWithPathVariable(String uri, String httpMethod) {
+    private static Optional<RequestControllerData> searchControllerWithPathVariable(String key) {
         ControllerUriChecker controllerUriChecker = new ControllerUriChecker();
         return ControllersMap.values.entrySet().stream()
-                .filter(each -> controllerUriChecker.matches(each.getKey(), httpMethod + uri))
+                .filter(each -> controllerUriChecker.matches(each.getKey(), key))
                 .map(Map.Entry::getValue)
                 .findFirst();
     }
