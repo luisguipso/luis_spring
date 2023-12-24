@@ -3,6 +3,7 @@ package org.example.metadata;
 import org.example.annotation.LuisGetMethod;
 import org.example.annotation.LuisPathVariable;
 import org.example.annotation.LuisPostMethod;
+import org.example.annotation.LuisRequestParam;
 import org.example.datastructures.ControllersMap;
 import org.example.datastructures.RequestControllerData;
 import org.example.util.LuisLogger;
@@ -31,18 +32,11 @@ public class MethodMetadataExtractor{
                     continue;
                 }
 
-                List<Parameter> pathParameters = getPathParameters(method);
-                RequestControllerData data = new RequestControllerData(httpMethod, path, className, method.getName(), pathParameters);
+                RequestControllerData data = new RequestControllerData(httpMethod, path, className, method.getName());
                 ControllersMap.values.put(httpMethod + path, data);
             }
         }
         logFoundHttpMethods();
-    }
-
-    private static List<Parameter> getPathParameters(Method method) {
-        return Arrays.stream(method.getParameters())
-                .filter(each -> Arrays.stream(each.getAnnotations()).anyMatch(LuisPathVariable.class::isInstance))
-                .toList();
     }
 
     private static void logFoundHttpMethods() {
