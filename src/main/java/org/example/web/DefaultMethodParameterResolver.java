@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.example.annotation.LuisBody;
 import org.example.annotation.LuisPathVariable;
 import org.example.annotation.LuisRequestParam;
-import org.example.datastructures.RequestControllerData;
 import org.example.util.LuisLogger;
 
 import java.io.BufferedReader;
@@ -30,14 +29,14 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
     }
 
     @Override
-    public Object[] resolveMethodParameters(HttpServletRequest request, RequestControllerData data, Method controllerMethod) {
+    public Object[] resolveMethodParameters(HttpServletRequest request, Method controllerMethod, String methodUri) {
         List<Object> args = new ArrayList<>();
         for (Parameter parameter : controllerMethod.getParameters()) {
             Optional<String> argument = Optional.empty();
             if (hasLuisBodyAnnotation(parameter)) {
                 argument = getArgumentFromRequestBody(request);
             } else if (hasLuisPathVariableAnnotation(parameter)) {
-                argument = getArgumentFromPathVariable(request, parameter, data);
+                argument = getArgumentFromPathVariable(request, parameter, methodUri);
             } else if (hasLuisRequestParamAnnotation(parameter)) {
                 argument = getArgumentFromRequestParam(request, parameter);
             }
@@ -76,20 +75,21 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
         return Arrays.stream(parameter.getAnnotations()).anyMatch(LuisPathVariable.class::isInstance);
     }
 
-    private Optional<String> getArgumentFromPathVariable(HttpServletRequest request, Parameter parameter, RequestControllerData data) {
+    private Optional<String> getArgumentFromPathVariable(HttpServletRequest request, Parameter parameter, String methodUri) {
         String paramName = Arrays.stream(parameter.getAnnotations())
                 .filter(LuisPathVariable.class::isInstance)
                 .map(each -> ((LuisPathVariable) each).value())
                 .findFirst().orElseThrow();
-        String argument = readVariableFromPath(paramName, data.getUrl(), request.getRequestURI());
+        String argument = readVariableFromPath(paramName, methodUri, request.getRequestURI());
         return Optional.ofNullable(argument);
     }
 
     private String readVariableFromPath(String paramName, String methodUrl, String requestURI) {
         String[] methodUrlTokens = methodUrl.split("/");
         for (int i = 0; i < methodUrlTokens.length; i++)
-            if (methodUrlTokens[i].replace("{", "").replace("}", "").equals(paramName))
+            if (methodUrlTokens[i].replaceAll("[{}]", "").equals(paramName))
                 return requestURI.split("/")[i];
+
 
         throw new RuntimeException("Could not read variable '" + paramName + "' from path: " + requestURI);
     }

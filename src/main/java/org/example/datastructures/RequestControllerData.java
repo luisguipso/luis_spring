@@ -1,50 +1,44 @@
 package org.example.datastructures;
 
+import java.lang.reflect.Method;
+
 public class RequestControllerData {
     private String httpMethod;
     private String url;
     private String controllerClass;
-    private String controllerMethod;
+    private String methodName;
+    private final Method method;
 
-    public RequestControllerData() {
+
+    public RequestControllerData(String httpMethod, String url, String controllerClass, Method method) {
+        this(httpMethod, url, controllerClass, method.getName(), method);
     }
 
-    public RequestControllerData(String httpMethod, String url, String controllerClass, String controllerMethod) {
+    public RequestControllerData(String httpMethod, String url, String controllerClass, String methodName, Method method) {
         this.httpMethod = httpMethod;
         this.url = url;
         this.controllerClass = controllerClass;
-        this.controllerMethod = controllerMethod;
+        this.methodName = methodName;
+        this.method = method;
     }
 
     public String getHttpMethod() {
         return httpMethod;
     }
 
-    public void setHttpMethod(String httpMethod) {
-        this.httpMethod = httpMethod;
-    }
-
     public String getUrl() {
         return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
     }
 
     public String getControllerClass() {
         return controllerClass;
     }
 
-    public void setControllerClass(String controllerClass) {
-        this.controllerClass = controllerClass;
+    public String getMethodName() {
+        return methodName;
     }
 
-    public String getControllerMethod() {
-        return controllerMethod;
-    }
-
-    public void setControllerMethod(String controllerMethod) {
-        this.controllerMethod = controllerMethod;
+    public Method getMethod() {
+        return method;
     }
 }

@@ -5,6 +5,6 @@ import org.example.datastructures.RequestControllerData;
 
 import java.util.Optional;
 
-public interface ControllerResolver {
+public interface ControllerDataResolver {
     Optional<RequestControllerData> findController(HttpServletRequest request);
 }

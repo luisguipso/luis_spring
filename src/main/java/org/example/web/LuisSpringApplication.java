@@ -62,12 +62,10 @@ public class LuisSpringApplication {
     }
 
     private static DispatchServlet getDispatchServlet() {
-        ControllerResolver controllerResolver = new DefaultControllerResolver();
-        ControllerMethodResolver controllerMethodResolver = new DefaultControllerMethodResolver();
+        ControllerDataResolver controllerDataResolver = new DefaultControllerDataResolver();
         MethodParameterResolver methodParameterResolver = new DefaultMethodParameterResolver();
-        return new DispatchServlet(
-                controllerResolver,
-                controllerMethodResolver,
-                methodParameterResolver);
+        ControllerInstanceResolver controllerInstanceResolver = new DefaultControllerInstanceResolver();
+        RequestHandler requestHandler = new DefaultRequestHandler(controllerDataResolver, methodParameterResolver, controllerInstanceResolver);
+        return new DispatchServlet(requestHandler);
     }
 }

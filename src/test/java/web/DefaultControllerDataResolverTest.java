@@ -3,12 +3,13 @@ package web;
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.datastructures.ControllersMap;
 import org.example.datastructures.RequestControllerData;
-import org.example.web.DefaultControllerResolver;
+import org.example.web.DefaultControllerDataResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,9 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class DefaultControllerResolverTest {
+class DefaultControllerDataResolverTest {
 
-    private DefaultControllerResolver controllerResolver;
+    private DefaultControllerDataResolver controllerResolver;
 
     @BeforeEach
     void setup() {
@@ -26,12 +27,17 @@ class DefaultControllerResolverTest {
         insertRequestControllerDataOnInMemoryMap("POST", "/example", "handlePostRequest");
         insertRequestControllerDataOnInMemoryMap("GET", "/test/{id}", "handleGetWithId");
         insertRequestControllerDataOnInMemoryMap("GET", "/test/{id}/additional", "handleGetWithIdExtraPathSegment");
-        controllerResolver = new DefaultControllerResolver();
+        controllerResolver = new DefaultControllerDataResolver();
     }
 
     private static void insertRequestControllerDataOnInMemoryMap(String method, String url, String methodName) {
-        RequestControllerData mockControllerData = new RequestControllerData(method, url, "anyclass", methodName);
-        ControllersMap.values.put(mockControllerData.getHttpMethod() + mockControllerData.getUrl(), mockControllerData);
+        insertRequestControllerDataOnInMemoryMap(method, url, methodName, 0);
+    }
+
+    private static void insertRequestControllerDataOnInMemoryMap(String method, String url, String methodName, long numberOfParams) {
+        RequestControllerData mockControllerData = new RequestControllerData(method, url, "anyclass", methodName, mock(Method.class));
+        String key = mockControllerData.getHttpMethod() + mockControllerData.getUrl() + "/p=" + numberOfParams;
+        ControllersMap.values.put(key, mockControllerData);
     }
 
     @Test
@@ -42,7 +48,7 @@ class DefaultControllerResolverTest {
         
         Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
-        assertEquals("handleGetRequest", result.orElseThrow().getControllerMethod());
+        assertEquals("handleGetRequest", result.orElseThrow().getMethodName());
     }
 
     @ParameterizedTest
@@ -59,7 +65,7 @@ class DefaultControllerResolverTest {
 
         Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
-        assertEquals(method, result.orElseThrow().getControllerMethod());
+        assertEquals(method, result.orElseThrow().getMethodName());
     }
 
     @Test
@@ -114,7 +120,7 @@ class DefaultControllerResolverTest {
 
         Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
-        assertEquals("handleGetWithId", result.orElseThrow().getControllerMethod());
+        assertEquals("handleGetWithId", result.orElseThrow().getMethodName());
     }
 
     @Test
@@ -128,7 +134,7 @@ class DefaultControllerResolverTest {
         Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertTrue(result.isPresent());
-        assertEquals("handleAnotherGetRequest", result.orElseThrow().getControllerMethod());
+        assertEquals("handleAnotherGetRequest", result.orElseThrow().getMethodName());
     }
 
     @Test
@@ -142,7 +148,7 @@ class DefaultControllerResolverTest {
 
         Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
-        assertEquals("handleUserPostRequest", result.orElseThrow().getControllerMethod());
+        assertEquals("handleUserPostRequest", result.orElseThrow().getMethodName());
     }
     @Test
     void testSearchController_SpecialCharactersInURI() {
@@ -155,7 +161,7 @@ class DefaultControllerResolverTest {
 
         Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
-        assertEquals("handleItemDetailsRequest", result.orElseThrow().getControllerMethod());
+        assertEquals("handleItemDetailsRequest", result.orElseThrow().getMethodName());
     }
 
 }

@@ -8,13 +8,13 @@ import org.example.util.LuisLogger;
 import java.util.Map;
 import java.util.Optional;
 
-public class DefaultControllerResolver implements ControllerResolver{
+public class DefaultControllerDataResolver implements ControllerDataResolver {
     @Override
     public Optional<RequestControllerData> findController(HttpServletRequest request) {
         if(request == null)
             return Optional.empty();
 
-        String key = request.getMethod() + request.getRequestURI();
+        String key = request.getMethod() + request.getRequestURI() + "/p=" + request.getParameterMap().size();
         Optional<RequestControllerData> foundData = searchForControllerDirectly(key);
         if (foundData.isEmpty())
             foundData = searchControllerWithPathVariable(key);
@@ -43,7 +43,7 @@ public class DefaultControllerResolver implements ControllerResolver{
                 "URI: %s (%s) - Handler: %s",
                 request.getRequestURI(),
                 request.getMethod(),
-                data.getControllerMethod());
-        LuisLogger.log(DefaultControllerResolver.class, message);
+                data.getMethod().getName());
+        LuisLogger.log(DefaultControllerDataResolver.class, message);
     }
 }
