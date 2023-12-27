@@ -1,9 +1,5 @@
 package org.example.datastructures;
 
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.List;
-
 public class RequestControllerData {
     private String httpMethod;
     private String url;
