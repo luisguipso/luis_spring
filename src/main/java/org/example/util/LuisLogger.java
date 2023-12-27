@@ -6,28 +6,30 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class LuisLogger {
-    public static String GREEN = "\u001B[32m";
-    public static String YELLOW = "\u001B[33m";
-    public static String WHITE = "\u001B[37m";
-    public static String RESET = "\u001B[0m";
-    public static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public static final String GREEN = "\u001B[32m";
+    public static final String YELLOW = "\u001B[33m";
+    public static final String WHITE = "\u001B[37m";
+    public static final String RESET = "\u001B[0m";
+    public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public static void log(Class module, String message){
+    public static void log(Class<?> module, String message){
         String time = LocalDateTime.now().format(DATE_FORMAT);
         System.out.printf(GREEN+ "%15s " + YELLOW + "%-40s: " + WHITE + "%s\n" + RESET, time, getName(module), message);
     }
 
-    public static void log(Class module, String message, Exception e){
+    public static void log(Class<?> module, String message, Exception e){
         message += "%nCaused by: %s%n    %s";
         message = String.format(message, e, getExceptionStackTrace(e));
         log(module, message);
     }
 
     private static String getExceptionStackTrace(Exception e) {
-        return Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining("\n    "));
+        return Arrays.stream(e.getStackTrace())
+                .map(StackTraceElement::toString)
+                .collect(Collectors.joining("\n    "));
     }
 
-    private static String getName(Class module) {
+    private static String getName(Class<?> module) {
         String name = module.getName();
         if (name.length() <= 40)
             return name;
