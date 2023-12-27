@@ -22,16 +22,20 @@ public class DefaultRequestHandler implements RequestHandler{
 
     @Override
     public Object handleRequest(HttpServletRequest request) throws Exception {
-        Optional<RequestControllerData> foundData = controllerDataResolver.findController(request);
-        if (foundData.isEmpty())
-            throw new MethodNotFoundException("Controller not found");
-
-        RequestControllerData data = foundData.get();
+        RequestControllerData data = getRequestControllerData(request);
         Object controller = controllerInstanceResolver.getController(data.getControllerClass());
         Method controllerMethod = data.getMethod();
         Object[] args = methodParameterResolver.resolveMethodParameters(request, controllerMethod, data.getUrl());
         logMethodInformation(controllerMethod);
         return controllerMethod.invoke(controller, args);
+    }
+
+    private RequestControllerData getRequestControllerData(HttpServletRequest request) {
+        Optional<RequestControllerData> foundData = controllerDataResolver.findController(request);
+        if (foundData.isEmpty())
+            throw new MethodNotFoundException("Controller not found");
+
+        return foundData.get();
     }
 
     private void logMethodInformation(Method controllerMethod) {
