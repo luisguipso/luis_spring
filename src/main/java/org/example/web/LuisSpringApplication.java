@@ -28,7 +28,7 @@ public class LuisSpringApplication {
         metadataExtractor.extractMetadata();
         ComponentLoader loader = new ComponentLoader();
         loader.loadComponents(allClasses);
-        Tomcat tomcat = startEmbededTomcat();
+        Tomcat tomcat = startEmbededTomcat(getDispatchServlet());
 
         long startupEnd = System.currentTimeMillis();
         LuisLogger.log(LuisSpringApplication.class, "LuisSpring Web Application started in: " + (startupEnd - startupInit) + "ms");
@@ -39,7 +39,7 @@ public class LuisSpringApplication {
         Logger.getLogger("org.apache").setLevel(Level.OFF);
     }
 
-    private static Tomcat startEmbededTomcat() {
+    private static Tomcat startEmbededTomcat(DispatchServlet servlet) {
         Tomcat tomcat = new Tomcat();
         Connector connector = new Connector();
         connector.setPort(8080);
@@ -48,9 +48,9 @@ public class LuisSpringApplication {
         String docBase = new File(".").getAbsolutePath();
         Context context = tomcat.addContext("", docBase);
 
-        String servletName = DispatchServlet.class.getSimpleName();
+        String servletName = servlet.getClass().getSimpleName();
         String contextPath = "/*";
-        Tomcat.addServlet(context, servletName, new DispatchServlet());
+        Tomcat.addServlet(context, servletName, servlet);
         context.addServletMappingDecoded(contextPath, servletName);
 
         try {
@@ -59,5 +59,15 @@ public class LuisSpringApplication {
             e.printStackTrace();
         }
         return tomcat;
+    }
+
+    private static DispatchServlet getDispatchServlet() {
+        ControllerResolver controllerResolver = new DefaultControllerResolver();
+        ControllerMethodResolver controllerMethodResolver = new DefaultControllerMethodResolver();
+        MethodParameterResolver methodParameterResolver = new DefaultMethodParameterResolver();
+        return new DispatchServlet(
+                controllerResolver,
+                controllerMethodResolver,
+                methodParameterResolver);
     }
 }

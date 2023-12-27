@@ -1,6 +1,5 @@
 package org.example.web;
 
-import jakarta.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.datastructures.ControllersMap;
 import org.example.datastructures.RequestControllerData;
@@ -9,9 +8,9 @@ import org.example.util.LuisLogger;
 import java.util.Map;
 import java.util.Optional;
 
-public class ControllerMatcher {
-
-    public static Optional<RequestControllerData> searchController(@Nonnull HttpServletRequest request) {
+public class DefaultControllerResolver implements ControllerResolver{
+    @Override
+    public Optional<RequestControllerData> findController(HttpServletRequest request) {
         if(request == null)
             return Optional.empty();
 
@@ -45,6 +44,6 @@ public class ControllerMatcher {
                 request.getRequestURI(),
                 request.getMethod(),
                 data.getControllerMethod());
-        LuisLogger.log(ControllerMatcher.class, message);
+        LuisLogger.log(DefaultControllerResolver.class, message);
     }
 }

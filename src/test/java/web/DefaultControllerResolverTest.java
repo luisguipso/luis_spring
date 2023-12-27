@@ -3,7 +3,7 @@ package web;
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.datastructures.ControllersMap;
 import org.example.datastructures.RequestControllerData;
-import org.example.web.ControllerMatcher;
+import org.example.web.DefaultControllerResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,7 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class ControllerMatcherTest {
+class DefaultControllerResolverTest {
+
+    private DefaultControllerResolver controllerResolver;
 
     @BeforeEach
     void setup() {
@@ -24,6 +26,7 @@ class ControllerMatcherTest {
         insertRequestControllerDataOnInMemoryMap("POST", "/example", "handlePostRequest");
         insertRequestControllerDataOnInMemoryMap("GET", "/test/{id}", "handleGetWithId");
         insertRequestControllerDataOnInMemoryMap("GET", "/test/{id}/additional", "handleGetWithIdExtraPathSegment");
+        controllerResolver = new DefaultControllerResolver();
     }
 
     private static void insertRequestControllerDataOnInMemoryMap(String method, String url, String methodName) {
@@ -36,8 +39,8 @@ class ControllerMatcherTest {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         when(mockRequest.getRequestURI()).thenReturn("/example");
         when(mockRequest.getMethod()).thenReturn("GET");
-
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertEquals("handleGetRequest", result.orElseThrow().getControllerMethod());
     }
@@ -54,7 +57,7 @@ class ControllerMatcherTest {
         when(mockRequest.getRequestURI()).thenReturn(uri);
         when(mockRequest.getMethod()).thenReturn(httpMethod);
 
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertEquals(method, result.orElseThrow().getControllerMethod());
     }
@@ -66,7 +69,7 @@ class ControllerMatcherTest {
         when(mockRequest.getMethod()).thenReturn("GET");
         ControllersMap.values.clear(); // Clearing the map for this test
 
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertEquals(Optional.empty(), result);
     }
@@ -78,7 +81,7 @@ class ControllerMatcherTest {
         when(mockRequest.getRequestURI()).thenReturn("/example");
         when(mockRequest.getMethod()).thenReturn("PUT");
 
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertEquals(Optional.empty(), result);
     }
@@ -86,7 +89,7 @@ class ControllerMatcherTest {
     @Test
     void testSearchController_InvalidRequest() {
         // Test with null request
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(null);
+        Optional<RequestControllerData> result = controllerResolver.findController(null);
 
         assertEquals(Optional.empty(), result);
     }
@@ -97,7 +100,7 @@ class ControllerMatcherTest {
         when(mockRequest.getRequestURI()).thenReturn("/Example");
         when(mockRequest.getMethod()).thenReturn("GET");
 
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertEquals(Optional.empty(), result);
     }
@@ -109,7 +112,7 @@ class ControllerMatcherTest {
         when(mockRequest.getRequestURI()).thenReturn("/test/1/");
         when(mockRequest.getMethod()).thenReturn("GET");
 
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertEquals("handleGetWithId", result.orElseThrow().getControllerMethod());
     }
@@ -122,7 +125,7 @@ class ControllerMatcherTest {
         when(mockRequest.getRequestURI()).thenReturn("/example");
         when(mockRequest.getMethod()).thenReturn("GET");
 
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertTrue(result.isPresent());
         assertEquals("handleAnotherGetRequest", result.orElseThrow().getControllerMethod());
@@ -137,7 +140,7 @@ class ControllerMatcherTest {
         when(mockRequest.getRequestURI()).thenReturn("/users/123/posts/456");
         when(mockRequest.getMethod()).thenReturn("POST");
 
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertEquals("handleUserPostRequest", result.orElseThrow().getControllerMethod());
     }
@@ -150,7 +153,7 @@ class ControllerMatcherTest {
         when(mockRequest.getRequestURI()).thenReturn("/items/abc%2F123/details"); // URI-encoded special character "/"
         when(mockRequest.getMethod()).thenReturn("GET");
 
-        Optional<RequestControllerData> result = ControllerMatcher.searchController(mockRequest);
+        Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
         assertEquals("handleItemDetailsRequest", result.orElseThrow().getControllerMethod());
     }
