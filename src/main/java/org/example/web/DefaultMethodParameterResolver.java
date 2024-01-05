@@ -55,7 +55,10 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
     }
 
     private Optional<String> getArgumentFromRequestBody(HttpServletRequest request) {
-        return Optional.of(readBytesFromRequest(request));
+        String body = readBytesFromRequest(request);
+        if(body == null || body.equals(""))
+            throw new EmptyRequestBodyException(String.format("Request body for request uri: '%s' must not be empty.", request.getRequestURI()));
+        return Optional.of(body);
     }
 
     private String readBytesFromRequest(HttpServletRequest request) {
@@ -87,11 +90,14 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
     private String readVariableFromPath(String paramName, String methodUrl, String requestURI) {
         String[] methodUrlTokens = methodUrl.split("/");
         for (int i = 0; i < methodUrlTokens.length; i++)
-            if (methodUrlTokens[i].replaceAll("[{}]", "").equals(paramName))
-                return requestURI.split("/")[i];
+            if (methodUrlTokens[i].replaceAll("[{}]", "").equals(paramName)) {
+                String[] requestTokens = requestURI.split("/");
+                if(requestTokens.length < i+1)
+                    throw new PathVariableNotFoundException(String.format("Variable: '%s' not found in request uri: '%s'", paramName, requestURI));
+                return requestTokens[i];
+            }
 
-
-        throw new RuntimeException("Could not read variable '" + paramName + "' from path: " + requestURI);
+        throw new PathVariableNotFoundException(String.format("Variable: '%s' not found in request uri: '%s'", paramName, requestURI));
     }
 
     private boolean hasLuisRequestParamAnnotation(Parameter parameter) {
