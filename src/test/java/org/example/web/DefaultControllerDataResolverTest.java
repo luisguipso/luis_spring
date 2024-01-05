@@ -1,4 +1,4 @@
-package web;
+package org.example.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.datastructures.ControllersMap;
@@ -12,8 +12,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -120,7 +119,7 @@ class DefaultControllerDataResolverTest {
 
         Optional<RequestControllerData> result = controllerResolver.findController(mockRequest);
 
-        assertEquals("handleGetWithId", result.orElseThrow().getMethodName());
+        assertFalse(result.isPresent());
     }
 
     @Test

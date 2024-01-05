@@ -2,6 +2,7 @@ package org.example.web;
 
 import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Objects;
 import org.example.annotation.LuisBody;
 import org.example.annotation.LuisPathVariable;
 import org.example.annotation.LuisRequestParam;
@@ -16,7 +17,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.lang.reflect.Method;
 import java.util.Optional;
-
+import org.example.web.exception.RequestBodyNotFoundException;
+import org.example.web.exception.PathVariableNotFoundException;
+import org.example.web.exception.RequestParamNotFoundException;
+import static java.util.Optional.of;
 
 public class DefaultMethodParameterResolver implements MethodParameterResolver {
 
@@ -34,11 +38,11 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
         for (Parameter parameter : controllerMethod.getParameters()) {
             Optional<String> argument = Optional.empty();
             if (hasLuisBodyAnnotation(parameter)) {
-                argument = getArgumentFromRequestBody(request);
+                argument = of(getArgumentFromRequestBody(request));
             } else if (hasLuisPathVariableAnnotation(parameter)) {
-                argument = getArgumentFromPathVariable(request, parameter, methodUri);
+                argument = of(getArgumentFromPathVariable(request, parameter, methodUri));
             } else if (hasLuisRequestParamAnnotation(parameter)) {
-                argument = getArgumentFromRequestParam(request, parameter);
+                argument = of(getArgumentFromRequestParam(request, parameter));
             }
             if (argument.isEmpty())
                 continue;
@@ -54,8 +58,11 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
         return Arrays.stream(parameter.getAnnotations()).anyMatch(LuisBody.class::isInstance);
     }
 
-    private Optional<String> getArgumentFromRequestBody(HttpServletRequest request) {
-        return Optional.of(readBytesFromRequest(request));
+    private String getArgumentFromRequestBody(HttpServletRequest request) {
+        String body = readBytesFromRequest(request);
+        if(body == null || body.isEmpty())
+            throw new RequestBodyNotFoundException(String.format("Request body for request uri: '%s' must not be empty.", request.getRequestURI()));
+        return body;
     }
 
     private String readBytesFromRequest(HttpServletRequest request) {
@@ -75,41 +82,48 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
         return Arrays.stream(parameter.getAnnotations()).anyMatch(LuisPathVariable.class::isInstance);
     }
 
-    private Optional<String> getArgumentFromPathVariable(HttpServletRequest request, Parameter parameter, String methodUri) {
+    private String getArgumentFromPathVariable(HttpServletRequest request, Parameter parameter, String methodUri) {
         String paramName = Arrays.stream(parameter.getAnnotations())
                 .filter(LuisPathVariable.class::isInstance)
                 .map(each -> ((LuisPathVariable) each).value())
-                .findFirst().orElseThrow();
-        String argument = readVariableFromPath(paramName, methodUri, request.getRequestURI());
-        return Optional.ofNullable(argument);
+                .findFirst()
+                .orElseThrow();
+        return readVariableFromPath(paramName, methodUri, request.getRequestURI());
     }
 
     private String readVariableFromPath(String paramName, String methodUrl, String requestURI) {
         String[] methodUrlTokens = methodUrl.split("/");
         for (int i = 0; i < methodUrlTokens.length; i++)
-            if (methodUrlTokens[i].replaceAll("[{}]", "").equals(paramName))
-                return requestURI.split("/")[i];
+            if (methodUrlTokens[i].replaceAll("[{}]", "").equals(paramName)) {
+                String[] requestTokens = requestURI.split("/");
+                if(requestTokens.length < i+1)
+                    throw new PathVariableNotFoundException(String.format("Variable: '%s' not found in request uri: '%s'", paramName, requestURI));
+                return requestTokens[i];
+            }
 
-
-        throw new RuntimeException("Could not read variable '" + paramName + "' from path: " + requestURI);
+        throw new PathVariableNotFoundException(String.format("Variable: '%s' not found in request uri: '%s'", paramName, requestURI));
     }
 
     private boolean hasLuisRequestParamAnnotation(Parameter parameter) {
         return Arrays.stream(parameter.getAnnotations()).anyMatch(LuisRequestParam.class::isInstance);
     }
 
-    private Optional<String> getArgumentFromRequestParam(HttpServletRequest request, Parameter parameter) {
-        String paramName = Arrays.stream(parameter.getAnnotations())
+    private String getArgumentFromRequestParam(HttpServletRequest request, Parameter parameter) {
+        String errorMessage = String.format("Parameter: %s not found in request to: %s", parameter.getName(), request.getRequestURI());
+        return Arrays.stream(parameter.getAnnotations())
                 .filter(LuisRequestParam.class::isInstance)
-                .map(each -> ((LuisRequestParam) each).value())
-                .findFirst().orElseThrow();
-        String param = request.getParameter(paramName);
-        return Optional.ofNullable(param);
+                .map(LuisRequestParam.class::cast)
+                .map(LuisRequestParam::value)
+                .map(request::getParameter)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseThrow(() -> new RequestParamNotFoundException(errorMessage));
+
     }
 
     private void logParameterFound(Parameter parameter, String argument) {
-        LuisLogger.log(this.getClass(), String.format(PARAMETER_FOUND_FROM_REQ_TYPE_MSG, parameter.getType().getName()));
-        LuisLogger.log(this.getClass(), String.format(PARAMETER_CONTENT_MSG, argument));
+        LuisLogger.log(getClass(), String.format(PARAMETER_FOUND_FROM_REQ_TYPE_MSG, parameter.getType().getName()));
+        LuisLogger.log(getClass(), String.format(PARAMETER_CONTENT_MSG, argument));
     }
 
 }

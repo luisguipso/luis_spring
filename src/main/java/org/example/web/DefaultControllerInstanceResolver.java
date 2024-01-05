@@ -2,6 +2,7 @@ package org.example.web;
 
 import org.example.datastructures.ComponentsInstances;
 import org.example.util.LuisLogger;
+import org.example.web.exception.MethodNotFoundException;
 
 public class DefaultControllerInstanceResolver implements ControllerInstanceResolver {
     @Override

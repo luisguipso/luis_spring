@@ -9,6 +9,7 @@ import org.example.util.LuisLogger;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import org.example.web.exception.MethodNotFoundException;
 
 public class DispatchServlet extends HttpServlet {
 
@@ -16,7 +17,7 @@ public class DispatchServlet extends HttpServlet {
     private final transient RequestHandler requestHandler;
 
     public DispatchServlet(RequestHandler requestHandler) {
-        this.gson = new Gson();
+        gson = new Gson();
         this.requestHandler = requestHandler;
     }
 

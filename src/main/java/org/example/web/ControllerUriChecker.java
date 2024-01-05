@@ -22,12 +22,10 @@ public class ControllerUriChecker {
         for (int t = 0; t < methodUriTokens.length; t++) {
             String methodUriToken = methodUriTokens[t];
             String requestUriToken = requestUriTokens[t];
-            if (isAPathParameter(methodUriToken, requestUriToken))
-                return Optional.of(true);
-            else if (!methodUriToken.equals(requestUriToken))
+            if (!isAPathParameter(methodUriToken, requestUriToken) && !methodUriToken.equals(requestUriToken))
                 return Optional.of(false);
         }
-        return Optional.empty();
+        return Optional.of(true);
     }
 
     private static boolean isAPathParameter(String methodUriToken, String requestUriToken) {

@@ -6,6 +6,7 @@ import org.example.util.LuisLogger;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
+import org.example.web.exception.MethodNotFoundException;
 
 public class DefaultRequestHandler implements RequestHandler{
 

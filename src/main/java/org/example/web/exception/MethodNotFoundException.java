@@ -1,4 +1,4 @@
-package org.example.web;
+package org.example.web.exception;
 
 public class MethodNotFoundException extends RuntimeException {
     public MethodNotFoundException(String message){
