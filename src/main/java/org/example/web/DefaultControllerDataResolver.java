@@ -18,7 +18,7 @@ public class DefaultControllerDataResolver implements ControllerDataResolver {
         Optional<RequestControllerData> foundData = searchForControllerDirectly(key);
         if (foundData.isEmpty())
             foundData = searchControllerWithPathVariable(key);
-        logFoundHandler(request, foundData);
+        foundData.ifPresent(data -> logFoundHandler(request, data));
         return foundData;
     }
 
@@ -34,16 +34,12 @@ public class DefaultControllerDataResolver implements ControllerDataResolver {
                 .findFirst();
     }
 
-    private static void logFoundHandler(HttpServletRequest request, Optional<RequestControllerData> foundData) {
-        if (foundData.isEmpty())
-            return;
-
-        RequestControllerData data = foundData.get();
+    private static void logFoundHandler(HttpServletRequest request, RequestControllerData foundData) {
         String message = String.format(
                 "URI: %s (%s) - Handler: %s",
                 request.getRequestURI(),
                 request.getMethod(),
-                data.getMethod().getName());
+                foundData.getMethod().getName());
         LuisLogger.log(DefaultControllerDataResolver.class, message);
     }
 }
