@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import org.example.annotation.LuisBody;
 import org.example.annotation.LuisPathVariable;
@@ -30,6 +31,8 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
     public static final String REQUEST_PARAMETER_NOT_FOUND_MSG = "Parameter: %s not found in request to: %s";
     public static final String PATH_VARIABLE_NOT_FOUND_MSG = "Variable: '%s' not found in request to: '%s'";
     public static final String ERROR_WHEN_READING_BODY_FROM_REQUEST_MSG = "Error when reading body from request to: %s";
+    public static final String REQUEST_BODY_FOR_REQUEST_MUST_NOT_BE_EMPTY_MSG = "Request body for request uri: '%s' must not be empty.";
+    private static final Pattern PATH_VARIABLE_REGEX_PATTERN = Pattern.compile("[{}]");
 
     private final Gson gson;
 
@@ -64,7 +67,8 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
     private String getArgumentFromRequestBody(HttpServletRequest request) {
         String body = readBytesFromRequest(request);
         if (body == null || body.isEmpty()) {
-            throw new RequestBodyNotFoundException(String.format("Request body for request uri: '%s' must not be empty.", request.getRequestURI()));
+            var errorMessage = String.format(REQUEST_BODY_FOR_REQUEST_MUST_NOT_BE_EMPTY_MSG, request.getRequestURI());
+            throw new RequestBodyNotFoundException(errorMessage);
         }
         return body;
     }
@@ -127,7 +131,7 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
     }
 
     private static String withoutPathVariableMarkers(String methodUriTokens) {
-        return methodUriTokens.replaceAll("[{}]", "");
+        return PATH_VARIABLE_REGEX_PATTERN.matcher(methodUriTokens).replaceAll("");
     }
 
     private boolean hasLuisRequestParamAnnotation(Parameter parameter) {
