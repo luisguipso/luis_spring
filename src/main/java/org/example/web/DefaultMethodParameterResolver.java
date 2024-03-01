@@ -2,23 +2,24 @@ package org.example.web;
 
 import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Objects;
-import org.example.annotation.LuisBody;
-import org.example.annotation.LuisPathVariable;
-import org.example.annotation.LuisRequestParam;
-import org.example.util.LuisLogger;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.Optional;
-import org.example.web.exception.RequestBodyNotFoundException;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import org.example.annotation.LuisBody;
+import org.example.annotation.LuisPathVariable;
+import org.example.annotation.LuisRequestParam;
+import org.example.util.LuisLogger;
 import org.example.web.exception.PathVariableNotFoundException;
+import org.example.web.exception.RequestBodyNotFoundException;
 import org.example.web.exception.RequestParamNotFoundException;
 import static java.util.Optional.of;
 
@@ -26,26 +27,28 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
 
     public static final String PARAMETER_FOUND_FROM_REQ_TYPE_MSG = "    Parameter of type: %s, found on request.";
     public static final String PARAMETER_CONTENT_MSG = "    Parameter content: %s";
+    public static final String REQUEST_PARAMETER_NOT_FOUND_MSG = "Parameter: %s not found in request to: %s";
+    public static final String PATH_VARIABLE_NOT_FOUND_MSG = "Variable: '%s' not found in request to: '%s'";
 
     private final Gson gson;
-    public DefaultMethodParameterResolver(){
+
+    public DefaultMethodParameterResolver() {
         gson = new Gson();
     }
 
     @Override
-    public Object[] resolveMethodParameters(HttpServletRequest request, Method controllerMethod, String methodUri) {
+    public Object[] resolveMethodParameters(HttpServletRequest request, Method controllerMethod, String methodMappedUri) {
         List<Object> args = new ArrayList<>();
         for (Parameter parameter : controllerMethod.getParameters()) {
             Optional<String> argument = Optional.empty();
             if (hasLuisBodyAnnotation(parameter)) {
                 argument = of(getArgumentFromRequestBody(request));
             } else if (hasLuisPathVariableAnnotation(parameter)) {
-                argument = of(getArgumentFromPathVariable(request, parameter, methodUri));
+                argument = of(getArgumentFromPathVariable(request, parameter, methodMappedUri));
             } else if (hasLuisRequestParamAnnotation(parameter)) {
                 argument = of(getArgumentFromRequestParam(request, parameter));
             }
-            if (argument.isEmpty())
-                continue;
+            if (argument.isEmpty()) {continue;}
 
             args.add(gson.fromJson(argument.get(), parameter.getType()));
             logParameterFound(parameter, argument.get());
@@ -53,15 +56,15 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
         return args.toArray();
     }
 
-
     private boolean hasLuisBodyAnnotation(Parameter parameter) {
         return Arrays.stream(parameter.getAnnotations()).anyMatch(LuisBody.class::isInstance);
     }
 
     private String getArgumentFromRequestBody(HttpServletRequest request) {
         String body = readBytesFromRequest(request);
-        if(body == null || body.isEmpty())
+        if (body == null || body.isEmpty()) {
             throw new RequestBodyNotFoundException(String.format("Request body for request uri: '%s' must not be empty.", request.getRequestURI()));
+        }
         return body;
     }
 
@@ -82,34 +85,56 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
         return Arrays.stream(parameter.getAnnotations()).anyMatch(LuisPathVariable.class::isInstance);
     }
 
-    private String getArgumentFromPathVariable(HttpServletRequest request, Parameter parameter, String methodUri) {
-        String paramName = Arrays.stream(parameter.getAnnotations())
+    private String getArgumentFromPathVariable(HttpServletRequest request, Parameter methodParameter, String methodMappedUri) {
+        var paramName = getParameterMappedName(methodParameter);
+        var requestURI = request.getRequestURI();
+        var methodUriTokens = methodMappedUri.split("/");
+        var requestTokens = requestURI.split("/");
+        int index = getIndexOfMappedParameterOnTokens(methodUriTokens, paramName);
+        var errorMessage = String.format(PATH_VARIABLE_NOT_FOUND_MSG, paramName, requestURI);
+        return getRequestTokenOrThrow(
+                requestTokens,
+                index,
+                cause -> new PathVariableNotFoundException(errorMessage, cause));
+    }
+
+    private static String getRequestTokenOrThrow(
+            String[] requestTokens, int index,
+            Function<RuntimeException, PathVariableNotFoundException> throable
+    ) {
+        try {
+            return requestTokens[index];
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw throable.apply(ex);
+        }
+    }
+
+    private static int getIndexOfMappedParameterOnTokens(String[] methodUriTokens, String paramName) {
+        return IntStream.range(0, methodUriTokens.length)
+                .filter(i -> withoutPathVariableMarkers(methodUriTokens[i]).equals(paramName))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private static String getParameterMappedName(Parameter methodParameter) {
+        return Arrays.stream(methodParameter.getAnnotations())
                 .filter(LuisPathVariable.class::isInstance)
                 .map(each -> ((LuisPathVariable) each).value())
                 .findFirst()
                 .orElseThrow();
-        return readVariableFromPath(paramName, methodUri, request.getRequestURI());
     }
 
-    private String readVariableFromPath(String paramName, String methodUrl, String requestURI) {
-        String[] methodUrlTokens = methodUrl.split("/");
-        for (int i = 0; i < methodUrlTokens.length; i++)
-            if (methodUrlTokens[i].replaceAll("[{}]", "").equals(paramName)) {
-                String[] requestTokens = requestURI.split("/");
-                if(requestTokens.length < i+1)
-                    throw new PathVariableNotFoundException(String.format("Variable: '%s' not found in request uri: '%s'", paramName, requestURI));
-                return requestTokens[i];
-            }
-
-        throw new PathVariableNotFoundException(String.format("Variable: '%s' not found in request uri: '%s'", paramName, requestURI));
+    private static String withoutPathVariableMarkers(String methodUriTokens) {
+        return methodUriTokens.replaceAll("[{}]", "");
     }
 
     private boolean hasLuisRequestParamAnnotation(Parameter parameter) {
-        return Arrays.stream(parameter.getAnnotations()).anyMatch(LuisRequestParam.class::isInstance);
+        return Arrays.stream(parameter.getAnnotations())
+                .anyMatch(LuisRequestParam.class::isInstance);
     }
 
     private String getArgumentFromRequestParam(HttpServletRequest request, Parameter parameter) {
-        String errorMessage = String.format("Parameter: %s not found in request to: %s", parameter.getName(), request.getRequestURI());
+        String errorMessage = String.format(REQUEST_PARAMETER_NOT_FOUND_MSG, parameter.getName(), request.getRequestURI());
         return Arrays.stream(parameter.getAnnotations())
                 .filter(LuisRequestParam.class::isInstance)
                 .map(LuisRequestParam.class::cast)

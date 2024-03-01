@@ -6,5 +6,5 @@ import java.lang.reflect.Method;
 
 
 public interface MethodParameterResolver {
-    Object[] resolveMethodParameters(HttpServletRequest request, Method controllerMethod, String methodUri);
+    Object[] resolveMethodParameters(HttpServletRequest request, Method controllerMethod, String methodMappedUri);
 }
