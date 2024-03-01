@@ -29,6 +29,7 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
     public static final String PARAMETER_CONTENT_MSG = "    Parameter content: %s";
     public static final String REQUEST_PARAMETER_NOT_FOUND_MSG = "Parameter: %s not found in request to: %s";
     public static final String PATH_VARIABLE_NOT_FOUND_MSG = "Variable: '%s' not found in request to: '%s'";
+    public static final String ERROR_WHEN_READING_BODY_FROM_REQUEST_MSG = "Error when reading body from request to: %s";
 
     private final Gson gson;
 
@@ -76,7 +77,8 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
                 str.append(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            var errorMessage = String.format(ERROR_WHEN_READING_BODY_FROM_REQUEST_MSG, request.getRequestURI());
+            LuisLogger.log(getClass(), errorMessage, e);
         }
         return str.toString();
     }
