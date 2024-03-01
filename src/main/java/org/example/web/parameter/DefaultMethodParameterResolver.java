@@ -1,4 +1,4 @@
-package org.example.web;
+package org.example.web.parameter;
 
 import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,7 +77,7 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
     private String readBytesFromRequest(HttpServletRequest request) {
         StringBuilder str = new StringBuilder();
         String line;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream(), StandardCharsets.UTF_8))) {
             while ((line = br.readLine()) != null) {
                 str.append(line);
             }
@@ -96,7 +97,7 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
         var requestURI = request.getRequestURI();
         var methodUriTokens = methodMappedUri.split("/");
         var requestTokens = requestURI.split("/");
-        int index = getIndexOfMappedParameterOnTokens(methodUriTokens, paramName);
+        int index = getIndexOfMappedParameter(methodUriTokens, paramName);
         var errorMessage = String.format(PATH_VARIABLE_NOT_FOUND_MSG, paramName, requestURI);
         return getRequestTokenOrThrow(
                 requestTokens,
@@ -115,8 +116,9 @@ public class DefaultMethodParameterResolver implements MethodParameterResolver {
         }
     }
 
-    private static int getIndexOfMappedParameterOnTokens(String[] methodUriTokens, String paramName) {
+    private static int getIndexOfMappedParameter(String[] methodUriTokens, String paramName) {
         return IntStream.range(0, methodUriTokens.length)
+                .filter(i -> PATH_VARIABLE_REGEX_PATTERN.asPredicate().test(methodUriTokens[i]))
                 .filter(i -> withoutPathVariableMarkers(methodUriTokens[i]).equals(paramName))
                 .findFirst()
                 .orElseThrow();

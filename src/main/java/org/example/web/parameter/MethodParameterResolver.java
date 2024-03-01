@@ -1,4 +1,4 @@
-package org.example.web;
+package org.example.web.parameter;
 
 import jakarta.servlet.http.HttpServletRequest;
 

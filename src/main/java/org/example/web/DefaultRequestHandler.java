@@ -1,12 +1,14 @@
 package org.example.web;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.lang.reflect.InvocationTargetException;
 import org.example.datastructures.RequestControllerData;
 import org.example.util.LuisLogger;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
 import org.example.web.exception.MethodNotFoundException;
+import org.example.web.parameter.MethodParameterResolver;
 
 public class DefaultRequestHandler implements RequestHandler{
 
@@ -22,7 +24,7 @@ public class DefaultRequestHandler implements RequestHandler{
     }
 
     @Override
-    public Object handleRequest(HttpServletRequest request) throws Exception {
+    public Object handleRequest(HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
         RequestControllerData data = getRequestControllerData(request);
         Object controller = controllerInstanceResolver.getController(data.getControllerClass());
         Method controllerMethod = data.getMethod();
@@ -40,8 +42,8 @@ public class DefaultRequestHandler implements RequestHandler{
     }
 
     private void logMethodInformation(Method controllerMethod) {
-        LuisLogger.log(this.getClass(), "Invoking method " + controllerMethod.getName() + " to handle request");
+        LuisLogger.log(getClass(), "Invoking method " + controllerMethod.getName() + " to handle request");
         if (controllerMethod.getParameterCount() > 0)
-            LuisLogger.log(this.getClass(), "Method " + controllerMethod.getName() + " has parameters");
+            LuisLogger.log(getClass(), "Method " + controllerMethod.getName() + " has parameters");
     }
 }

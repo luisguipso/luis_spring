@@ -14,8 +14,12 @@ import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.example.web.parameter.DefaultMethodParameterResolver;
+import org.example.web.parameter.MethodParameterResolver;
 
-public class LuisSpringApplication {
+public final class LuisSpringApplication {
+
+    private LuisSpringApplication() {}
 
     public static void run(Class<?> sourceClass) {
         disableApacheLogs();
@@ -56,7 +60,7 @@ public class LuisSpringApplication {
         try {
             tomcat.start();
         } catch (LifecycleException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return tomcat;
     }
