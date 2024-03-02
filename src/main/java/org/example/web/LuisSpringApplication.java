@@ -1,5 +1,9 @@
 package org.example.web;
 
+import java.io.File;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Connector;
@@ -9,13 +13,11 @@ import org.example.explore.ClassExplorer;
 import org.example.metadata.MetadataExtractor;
 import org.example.metadata.MetadataExtractorImpl;
 import org.example.util.LuisLogger;
-
-import java.io.File;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.example.web.parameter.DefaultMethodParameterResolver;
 import org.example.web.parameter.MethodParameterResolver;
+import org.example.web.parameter.PathVariableResolver;
+import org.example.web.parameter.RequestBodyResolver;
+import org.example.web.parameter.RequestParameterResolver;
 
 public final class LuisSpringApplication {
 
@@ -67,7 +69,10 @@ public final class LuisSpringApplication {
 
     private static DispatchServlet getDispatchServlet() {
         ControllerDataResolver controllerDataResolver = new DefaultControllerDataResolver();
-        MethodParameterResolver methodParameterResolver = new DefaultMethodParameterResolver();
+        var parameterResolvers = List.of(new PathVariableResolver(),
+                new RequestBodyResolver(),
+                new RequestParameterResolver());
+        MethodParameterResolver methodParameterResolver = new DefaultMethodParameterResolver(parameterResolvers);
         ControllerInstanceResolver controllerInstanceResolver = new DefaultControllerInstanceResolver();
         RequestHandler requestHandler = new DefaultRequestHandler(controllerDataResolver, methodParameterResolver, controllerInstanceResolver);
         return new DispatchServlet(requestHandler);
