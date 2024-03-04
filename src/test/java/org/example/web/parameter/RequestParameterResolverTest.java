@@ -1,10 +1,10 @@
 package org.example.web.parameter;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 import org.example.web.exception.RequestParamNotFoundException;
+import org.example.web.parameter.mock.MockController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.example.web.parameter.DefaultMethodParameterResolverTest.getMethodOfClassWithName;
@@ -26,7 +26,7 @@ class RequestParameterResolverTest {
     @Test
     void testResolveMethodParameters_RequestParam() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class,"methodWithRequestParam");
+        Method mockMethod = getMethodOfClassWithName(MockController.class,"methodWithRequestParam");
         String methodUri = "/some/uri/";
 
         when(mockRequest.getParameter("paramName"))
@@ -42,7 +42,7 @@ class RequestParameterResolverTest {
     @Test
     void testResolveMethodParameters_TwoRequestParams() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class,"methodWithTwoRequestParam");
+        Method mockMethod = getMethodOfClassWithName(MockController.class,"methodWithTwoRequestParam");
         String methodUri = "/some/uri/";
 
         when(mockRequest.getParameter("paramName"))
@@ -59,9 +59,9 @@ class RequestParameterResolverTest {
     }
 
     @Test
-    void testResolveMethodParameters_MissingRequestParam() throws IOException {
+    void testResolveMethodParameters_MissingRequestParam() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "methodWithRequestParam");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "methodWithRequestParam");
         String methodUri = "/some/uri";
         when(mockRequest.getRequestURI())
                 .thenReturn("/some/uri");
@@ -75,7 +75,7 @@ class RequestParameterResolverTest {
     @Test
     void testResolveMethodWithNoParameters() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "methodWithNoParams");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "methodWithNoParams");
         String methodUri = "/some/uri";
 
         Object[] resolvedParametersWithoutBody = resolver.resolveMethodParameters(mockRequest, mockMethod, methodUri);

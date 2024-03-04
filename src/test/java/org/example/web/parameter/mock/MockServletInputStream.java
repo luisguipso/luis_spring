@@ -1,4 +1,4 @@
-package org.example.web;
+package org.example.web.parameter.mock;
 
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
@@ -11,7 +11,7 @@ public class MockServletInputStream extends ServletInputStream {
     private final InputStream stream;
 
     public MockServletInputStream(String input) {
-        this.stream = new ByteArrayInputStream(input.getBytes());
+        stream = new ByteArrayInputStream(input.getBytes());
     }
 
     @Override

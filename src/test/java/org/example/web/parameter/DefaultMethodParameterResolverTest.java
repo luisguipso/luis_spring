@@ -1,10 +1,10 @@
 package org.example.web.parameter;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import org.example.web.parameter.mock.MockController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,20 +33,20 @@ class DefaultMethodParameterResolverTest {
     }
 
     @Test
-    void testResolveMethodParameters_MultipleParameterTypes() throws IOException {
+    void testResolveMethodParameters_MultipleParameterTypes() {
         when(pathResolverMock.resolveMethodParameters(any(), any(), anyString()))
                 .thenReturn(List.of("valueOnPath"));
         when(paramResolverMock.resolveMethodParameters(any(), any(), anyString()))
                 .thenReturn(List.of("paramValue"));
         when(bodyResolverMock.resolveMethodParameters(any(), any(), anyString()))
-                .thenReturn(List.of(new SomeController.SomeData().setKey("valueOnBody")));
+                .thenReturn(List.of(new MockController.SomeData().setKey("valueOnBody")));
 
         Object[] resolvedParameters = resolver.resolveMethodParameters(mock(HttpServletRequest.class), mock(Method.class), "");
 
         assertEquals(3, resolvedParameters.length);
         assertEquals("valueOnPath", resolvedParameters[0]);
         assertEquals("paramValue", resolvedParameters[1]);
-        assertEquals("valueOnBody", ((SomeController.SomeData) resolvedParameters[2]).getKey());
+        assertEquals("valueOnBody", ((MockController.SomeData) resolvedParameters[2]).getKey());
     }
 
     @Test
@@ -57,7 +57,7 @@ class DefaultMethodParameterResolverTest {
         assertEquals(0, resolvedParametersWithoutBody.length);
     }
 
-    public static Method getMethodOfClassWithName(Class<SomeController> clazz, String methodName) {
+    public static Method getMethodOfClassWithName(Class<MockController> clazz, String methodName) {
         return Arrays.stream(clazz.getDeclaredMethods())
                 .filter(method -> method.getName().equals(methodName))
                 .findFirst()

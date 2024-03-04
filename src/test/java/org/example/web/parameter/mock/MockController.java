@@ -1,10 +1,10 @@
-package org.example.web.parameter;
+package org.example.web.parameter.mock;
 
 import org.example.annotation.LuisBody;
 import org.example.annotation.LuisPathVariable;
 import org.example.annotation.LuisRequestParam;
 
-public class SomeController {
+public class MockController {
 
     public String methodWithBody(@LuisBody SomeData body){
         return "added";

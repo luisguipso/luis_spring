@@ -4,8 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
-import org.example.web.MockServletInputStream;
+import org.example.web.parameter.mock.MockServletInputStream;
 import org.example.web.exception.PathVariableNotFoundException;
+import org.example.web.parameter.mock.MockController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.example.web.parameter.DefaultMethodParameterResolverTest.getMethodOfClassWithName;
@@ -28,7 +29,7 @@ class PathVariableResolverTest {
     @Test
     void testResolveMethodParameters_PathVariable() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "methodWithPathVariable");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "methodWithPathVariable");
         String methodUri = "/some/uri/{key}";
 
         when(mockRequest.getRequestURI())
@@ -43,7 +44,7 @@ class PathVariableResolverTest {
     @Test
     void testResolveMethodParameters_WithTwoPathVariables() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "methodWithTwoPathVariables");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "methodWithTwoPathVariables");
         String methodUri = "/some/uri/{key}/lock/{lock}";
 
         when(mockRequest.getRequestURI())
@@ -59,7 +60,7 @@ class PathVariableResolverTest {
     @Test
     void testResolveMethodParameters_MissingPathVariable() throws IOException {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "methodWithPathVariable");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "methodWithPathVariable");
         String methodUri = "/some/uri/{key}";
         when(mockRequest.getInputStream())
                 .thenReturn(new MockServletInputStream("{\"key\": \"valueOnBody\"}"));
@@ -76,7 +77,7 @@ class PathVariableResolverTest {
     @Test
     void testResolveMethodWithNoParameters() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "methodWithNoParams");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "methodWithNoParams");
         String methodUri = "/some/uri";
 
         Object[] resolvedParametersWithoutBody = resolver.resolveMethodParameters(mockRequest, mockMethod, methodUri);

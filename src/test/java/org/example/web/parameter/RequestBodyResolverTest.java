@@ -4,9 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
-import org.example.web.MockServletInputStream;
+import org.example.web.parameter.mock.MockServletInputStream;
 import org.example.web.exception.RequestBodyNotFoundException;
-import org.junit.jupiter.api.BeforeAll;
+import org.example.web.parameter.mock.MockController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.example.web.parameter.DefaultMethodParameterResolverTest.getMethodOfClassWithName;
@@ -29,7 +29,7 @@ class RequestBodyResolverTest {
     @Test
     void testResolveMethodParameters_LuisBody() throws IOException {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "methodWithBody");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "methodWithBody");
         String methodUri = "/some/uri";
 
         when(mockRequest.getInputStream()).thenReturn(new MockServletInputStream("{\"key\": \"value\"}"));
@@ -37,13 +37,13 @@ class RequestBodyResolverTest {
         Object[] resolvedParameters = resolver.resolveMethodParameters(mockRequest, mockMethod, methodUri);
 
         assertEquals(1, resolvedParameters.length);
-        assertEquals("value", ((SomeController.SomeData) resolvedParameters[0]).getKey());
+        assertEquals("value", ((MockController.SomeData) resolvedParameters[0]).getKey());
     }
 
     @Test
     void testResolveMethodParameters_MissingBody() throws IOException {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "withMultipleParams");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "withMultipleParams");
         String methodUri = "/some/uri/{key}";
 
         when(mockRequest.getInputStream())
@@ -58,7 +58,7 @@ class RequestBodyResolverTest {
     @Test
     void testResolveMethodWithNoParameters() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        Method mockMethod = getMethodOfClassWithName(SomeController.class, "methodWithNoParams");
+        Method mockMethod = getMethodOfClassWithName(MockController.class, "methodWithNoParams");
         String methodUri = "/some/uri";
 
         Object[] resolvedParametersWithoutBody = resolver.resolveMethodParameters(mockRequest, mockMethod, methodUri);
