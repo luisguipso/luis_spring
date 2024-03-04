@@ -6,7 +6,9 @@ import org.example.util.ClassUtil;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
-public class ComponentUtils {
+public final class ComponentUtils {
+    private ComponentUtils() {}
+
     public static boolean isALuisComponent(String className) {
         Class<?> clazz = ClassUtil.getClass(className);
         return Arrays.stream(clazz.getAnnotations())
@@ -15,7 +17,8 @@ public class ComponentUtils {
     }
 
     private static boolean isLuisComponentAnnotation(Class<? extends Annotation> annotationType) {
-        return Arrays.stream(annotationType.getAnnotations())
+        return annotationType.equals(LuisComponent.class)
+                || Arrays.stream(annotationType.getAnnotations())
                 .anyMatch(each -> each.annotationType().equals(LuisComponent.class));
     }
 }
