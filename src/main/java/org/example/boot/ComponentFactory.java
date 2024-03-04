@@ -16,17 +16,20 @@ import static java.util.Optional.of;
 
 public class ComponentFactory {
 
+    public static final int DEFAULT_CONSTRUCTOR_PARAMETERS_NUMBER = 0;
+    public static final int DEFAULT_NUMBER_OF_CONSTRUCTORS = 1;
+
     public static Object createComponent(String className) {
         LuisLogger.log(ComponentFactory.class, "Creating new component instance, for: " + className);
         try {
-            return invokeComponentConstructors(ClassUtil.getClass(className));
+            return createComponentInstance(ClassUtil.getClass(className));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private static Object invokeComponentConstructors(Class<?> componentClass) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+    private static Object createComponentInstance(Class<?> componentClass) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         Constructor<?>[] constructors = componentClass.getConstructors();
         Optional<Object> component = Optional.empty();
         for (Constructor<?> constructor : constructors)
@@ -36,12 +39,17 @@ public class ComponentFactory {
     }
 
     private static Object invokeConstructor(Constructor<?> constructor, int constructorsCount) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        if (constructor.getParameterCount() == 0 && constructorsCount == 1)
+        if (onlyDefautConstructorIsPresent(constructor, constructorsCount))
             return constructor.newInstance();
 
         List<String> parametersTypes = getParametersTypes(constructor);
         List<Object> parameters = getParametersInstances(parametersTypes);
         return constructor.newInstance(parameters.toArray());
+    }
+
+    private static boolean onlyDefautConstructorIsPresent(Constructor<?> constructor, int constructorsCount) {
+        return constructor.getParameterCount() == DEFAULT_CONSTRUCTOR_PARAMETERS_NUMBER
+                && constructorsCount == DEFAULT_NUMBER_OF_CONSTRUCTORS;
     }
 
     private static List<String> getParametersTypes(Constructor<?> constructor) {
